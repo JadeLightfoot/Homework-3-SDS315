@@ -29,7 +29,7 @@ covid <- read.csv("/Users/jadelightfoot/Downloads/covid.csv")
 milk <- read.csv("/Users/jadelightfoot/Downloads/milk.csv")
 ```
 
-Github Repo link:
+Github Repo link: https://github.com/JadeLightfoot/Homework-3-SDS315
 
 ## **Problem 1** ##
 
