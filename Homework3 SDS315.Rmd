@@ -1,0 +1,182 @@
+---
+title: "Homework 3 SDS315"
+author: "Jade Lightfoot (jsl3652)"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+```{r echo=FALSE}
+knitr::opts_chunk$set(fig.height=6, fig.width=6, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60))
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(kableExtra))
+
+
+```
+
+
+```{r echo=FALSE , messages = FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+
+creatinine <- read.csv("/Users/jadelightfoot/Downloads/creatinine.csv")
+marketmodel <- read.csv("/Users/jadelightfoot/Downloads/marketmodel.csv")
+covid <- read.csv("/Users/jadelightfoot/Downloads/covid.csv")
+milk <- read.csv("/Users/jadelightfoot/Downloads/milk.csv")
+```
+
+Github Repo link:
+
+## **Problem 1** ##
+
+***
+
+### **Part A** ###
+
+```{r echo=FALSE , eval=FALSE}
+creatmodel <- lm(creatclear ~ age, data=creatinine)
+creatslope <-coef(creatmodel)[2]
+intercept <- coef(creatmodel)[1]
+agetopredict <- 55
+predicted <- creatslope*agetopredict + intercept 
+print(predicted)
+```
+
+The creatinine clearance rate that we should expect for a 55 year old is 113.723. I determined this by making a linear model using the creatinine data set. I then calculate the slope of the linear model as well as the intercept. I used the equation slope times x, whixh is the age to predict plus the intercept to find the predicted creatinine clearance for age 55. 
+
+
+***
+### **Part B** ###
+```{r echo=FALSE , eval=FALSE}
+print(creatslope)
+```
+
+The creatinine clearance rate changes with age as it decreases about .62 ml/ minute per year. I determined this by clculating slope using the coef function to get the slope of the linear regression line for the creatinine data set. 
+
+
+***
+### **Part C** ###
+```{r echo=FALSE , eval=FALSE}
+age40 <- data.frame(age = 40)
+age60 <- data.frame(age = 60)
+predicted40 <- predict(creatmodel, age40)
+predicte60 <- predict(creatmodel, age60)
+diff40 <- 135 - predicted40
+diff60 <- 112 - predicte60
+
+print(diff40)
+print(diff60)
+
+```
+
+The 40 year old patient is healthier for their age and the 60 year old patient falss close to the rest of those in their age group for the creatinine clearance rate. I determined this by creating two seperate data frames for the ages 40 and 60 I then found the predicted creatinine clearance rate using the predict function and linear regression model for both age 40 and 60. Once I obtained my predicted variables I subtracted to find the difference in a 40 year old with the rate of 135 from the regression line and did the same with the 60 year old. After analyzing the output I found that the 40 year old differed much more than the 60 year old did from their predicte dor expected rate of creatinine clearance. 
+
+***
+
+## **Problem 2** ##
+
+```{r echo= FALSE}
+
+stocks <- c("AAPL", "GOOG", "MRK", "JNJ", "WMT", "TGT")
+stockresults <- tibble(ticker= character(), intercept= numeric(), slope= numeric(), rsquared= numeric())
+
+for (stock in stocks){
+  stockmodel <- lm(get(stock)~ SPY, data= marketmodel)
+
+
+stockinter <- coef(stockmodel)[1]
+stockslope <- coef(stockmodel)[2]
+stockrsquar <- summary(stockmodel)$r.squared
+
+stockresults <- stockresults %>%
+  add_row(ticker= stock, intercept= stockinter, slope= stockslope, rsquared = stockrsquar)
+}
+
+
+kable(stockresults, "html") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) 
+```
+
+
+The table above provides information on the stock of Apple (AAPL), Google (GOOG), Mereck (MRK), Johnson and Johnson (JNJ), Walmart (WMT), and Target (TGT). the table contains columns including ticker , which is the stock name, intercept, which is when we are looking at a linear regression line based on the stock as it crosses the y axis, slope which tells the change in numbers per stock, and the r-squared value, containing information on how well the data falls in line. 
+
+Out of the stocks above the stock with the lowest systematic risk is Walmart (WMT) meaning they can be subjected to more risk than the other stocks and still remain a float. The stock with the highest systematic risk is Apple (AAPL) meaning that Apple is unable to take a lot of risks compared to other stocks. 
+
+A beta of a stock measures a stocks liability to change foe better or for worse.  Beta represents the percent change in an assets return given a 1% change in the market portfolio. Beta's main purpose is to calculate total risk, systematic and unsystematic risks, representing beta. Beta is calculated based on covariance which is stock returns and index returns divided by variance which is index returns. If beta is of zero or close to zero there is no systematic risk. If beta is negative beta this means there is a negative risk, which is why most companies have insurance. 
+
+
+***
+
+## **Problem 3** ##
+
+```{r echo=FALSE}
+italydata <- covid %>%
+  filter(country == 'Italy')
+spaindata <- covid %>%
+  filter(country == 'Spain')
+
+fit_model <- function(covid){
+  covmodel<- lm(log(deaths) ~ days_since_first_death, data= covid)
+  growth_rate <- coef(covmodel)[["days_since_first_death"]]
+  doublingtime <- 1/ growth_rate
+  return(list(growth_rate = growth_rate, doublingtime=doublingtime))
+}
+
+resultsitaly <- fit_model(italydata)
+resultsspain <- fit_model(spaindata)
+
+
+
+```
+
+```{r echo= FALSE , eval=FALSE}
+print(resultsitaly)
+print(resultsspain)
+
+```
+
+
+```{r echo=FALSE}
+
+ggplot() +
+  geom_line(data= italydata, aes(x= days_since_first_death, y= deaths, color = "Italy"), size = 1) + geom_line(data= spaindata, aes(x= days_since_first_death, y= deaths, color = "Spain"), size = 1) +labs(title = "COVID-19 Daily Deaths", x= "Days Since First Death", y="Country") + theme_minimal() 
+
+
+
+
+```
+
+#### **Italy** ####
+Doubling Time: 5
+
+Growth Rate: 0.183
+
+
+#### **Spain** ####
+Doubling Time: 4
+
+Growth Rate: 0.276
+
+
+***
+
+## **Problem 4** ##
+
+```{r}
+lm_milk = lm(log(sales) ~ log(price), data=milk)
+coef(lm_milk)
+
+```
+
+The estimated price elasticity of the demand for milk is about -1.62, meaning that when the price increases people are more like to buy around 1.62% less of of it. In order to find the estimate I fitted the price and sales of milk onto a log scale to find the intercept and the (log(price)) estimated price of elasticity using the milk data.
+
+
+
+
+
+
+
